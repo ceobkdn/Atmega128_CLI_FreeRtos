@@ -1,0 +1,33 @@
+RAM Allocation
+Variable                                                          Address   Size
+--------------------------------------------------------------------------------
+cli                                                               0x0821       6
+cmd_tbl                                                           0x0827      28
+LedCtrl                                                           0x0843       2
+rx_buffer0                                                        0x0845      17
+vertical                                                          0x0856       8
+english                                                           0x085E     224
+DispChar                                                          0x093E       1
+LoadInit                                                          0x093F       2
+buf                                                               0x0941     128
+buf_ptr                                                           0x09C1       2
+cmd_buf                                                           0x09C3     128
+cli_prompt                                                        0x0A43       4
+cli_unrecog                                                       0x0A47       2
+Num                                                               0x0A49      11
+p_S1010026000                                                     0x0A54       2
+_seed                                                             0x0A56       4
+
+EEPROM Allocation
+Variable                                                          Address   Size
+--------------------------------------------------------------------------------
+
+Register Allocation
+Variable                                                          Register  Size
+--------------------------------------------------------------------------------
+rx_buffer_overflow0                                               R2.0      1bit
+cmd_enter                                                         R2.1      1bit
+num_cnt1                                                          R4,R5        2
+num_cnt2                                                          R6,R7        2
+con                                                               R9           1
+FndCnt                                                            R10,R11      2

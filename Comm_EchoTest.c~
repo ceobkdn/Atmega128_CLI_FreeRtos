@@ -1,0 +1,124 @@
+/*
+Project : 트레이닝보드와 PC간의 RS232포트를 사용하여 통신 패킷 송수신 테스트
+Version : LK-AVR128T V01
+Date    : 2011-07-28
+Author  : Kyung Nam Lee
+Company : LKEMBEDDED 
+Compiler: CodevisionAVR+AVRStudio
+Comment: PC에서 송신 한 8Byte의 데이터 패킷을 트레이닝보드에서 수신 후, PC쪽으로 재 전송하는 프로그램이다.
+         이때의  실험 시 UTS(USB TO RS232)컨버터를 사용하여 PC와 트레이닝보드를 연결 하였다. 
+*/
+
+#include <mega128.h>
+#include <stdio.h> // Standard Input/Output functions
+#include <string.h>
+#include <delay.h>
+
+
+
+#define LED_CON               *((unsigned char *)0x8000) // LED Control bus
+#define SET_CON                  *((unsigned char *)0x8100) // FND, Buzzer, RELAY Control bus
+#define LCD_CON               *((unsigned char *)0x8200) // TLCD, GLCD Control bus
+#define LCD_DATABUS           *((unsigned char *)0x8300) // TLCD, GLCD, FND, Dotmatrix Data bus
+#define DOT_YELLOW              *((unsigned char *)0x8400) // Dotmatrix Yellow LED
+#define DOT_RED                  *((unsigned char *)0x8500) // Dotmatrix Yellow RED
+#define STEPMOR                  *((unsigned char *)0x8600) // Stepping Motor Control bus
+#define DCSERVO				  *((unsigned char *)0x8700) // DC, Servo Motor Control bus
+
+#define RXB8 1
+#define TXB8 0
+#define UPE 2
+#define DOR 3
+#define FE 4
+#define UDRE 5
+#define RXC 7
+
+#define FRAMING_ERROR (1<<FE)
+#define PARITY_ERROR (1<<UPE)
+#define DATA_OVERRUN (1<<DOR)
+#define DATA_REGISTER_EMPTY (1<<UDRE)
+#define RX_COMPLETE (1<<RXC)
+#define RX_BUFFER_SIZE0 8 // USART0 Receiver buffer
+
+char rx_buffer0[RX_BUFFER_SIZE0];
+unsigned int rx_wr_index0,rx_counter0;
+bit rx_buffer_overflow0; // This flag is set on USART0 Receiver buffer overflow
+
+//void fPrint(char *string);
+//void cli_put(char c);
+void USART_Transmit( unsigned int data );
+
+interrupt [USART0_RXC] void usart0_rx_isr(void)// USART0 Receiver interrupt service routine
+{
+char status,data;
+status=UCSR0A;
+data=UDR0;
+USART_Transmit(data);
+   
+if ((status & (FRAMING_ERROR | PARITY_ERROR | DATA_OVERRUN))==0)
+   {
+   rx_buffer0[rx_wr_index0++]=data;
+   if (rx_wr_index0 == RX_BUFFER_SIZE0) rx_wr_index0=0;
+   if (++rx_counter0 == RX_BUFFER_SIZE0)
+      {
+      rx_counter0=0;
+      rx_buffer_overflow0=1;
+      }
+   }
+}
+
+void main(void)
+{
+    // USART0 initialization
+    UCSR0A=0x00; // Communication Parameters: 8 Data, 1 Stop, No Parity
+    UCSR0B=0x98; // USART0 Receiver: On
+    UCSR0C=0x06; // USART0 Transmitter: On
+    UBRR0H=0x00; // USART0 Mode: Asynchronous
+    UBRR0L=0x67;  // USART0 Baud Rate: 9600   
+
+    
+    //---External I/O initialization       
+	LED_CON=0X00;       // LED GLCD Control bus
+	SET_CON=0X00;       // FND, Buzzer, RELAY Control bus
+	LCD_CON=0X00;       // TLCD, GLCD Control bus
+	LCD_DATABUS=0X00;   // TLCD, GLCD, FND, Dotmatrix Data bus
+	DOT_YELLOW=0X00;    // Dotmatrix Yellow LED
+	DOT_RED=0X00;       // Dotmatrix Yellow RED
+	STEPMOR=0X00;       // Stepping Motor Control bus
+	DCSERVO=0X00;       // DC, Servo Motor Control bus      
+    //----------------------------------------     
+    #asm("sei") // Global enable interrupts 
+while (1) // Endless Loop
+      { 
+       int i=0;
+       if(rx_buffer_overflow0)
+       {
+            for(i=0;i<8;i++)
+            {
+                USART_Transmit(rx_buffer0[i]);
+            }
+
+            rx_buffer_overflow0=0; 
+            USART_Transmit( '\n' );
+        }   
+       
+       
+        
+        
+      }
+}
+
+
+
+
+void USART_Transmit( unsigned int data )
+{
+/* Wait for empty transmit buffer */
+while ( !( UCSR0A & (1<<UDRE)) );
+/* Copy 9th bit to TXB8 */
+UCSR0B &= ~(1<<TXB8);
+if ( data & 0x0100 )
+UCSR0B |= (1<<TXB8);
+/* Put data into buffer, sends the data */
+UDR0 = data;
+}

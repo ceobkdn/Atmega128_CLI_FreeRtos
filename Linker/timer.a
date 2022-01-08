@@ -1,0 +1,118 @@
+;/*****************************************************************************
+; *   @file
+; *   @brief  Source file of
+; *   @author Kyle
+; *   @version 1.0.0
+; *   @note :    1.
+; *              2.
+; *              3.
+;********************************************************************************/
+;
+;
+;/******************************************************************************/
+;/***************************** Include Files **********************************/
+;/******************************************************************************/
+;#include "timer.h"
+;PCODE: $00000000 VOL: 0
+	#ifndef __SLEEP_DEFINED__
+;PCODE: $00000001 VOL: 0
+	#define __SLEEP_DEFINED__
+;PCODE: $00000002 VOL: 0
+	.EQU __se_bit=0x20
+;PCODE: $00000003 VOL: 0
+	.EQU __sm_mask=0x1C
+;PCODE: $00000004 VOL: 0
+	.EQU __sm_powerdown=0x10
+;PCODE: $00000005 VOL: 0
+	.EQU __sm_powersave=0x18
+;PCODE: $00000006 VOL: 0
+	.EQU __sm_standby=0x14
+;PCODE: $00000007 VOL: 0
+	.EQU __sm_ext_standby=0x1C
+;PCODE: $00000008 VOL: 0
+	.EQU __sm_adc_noise_red=0x08
+;PCODE: $00000009 VOL: 0
+	.SET power_ctrl_reg=mcucr
+;PCODE: $0000000A VOL: 0
+	#endif
+;PCODE: $0000000B VOL: 0
+;PCODE: $0000000C VOL: 0
+;
+;
+;/******************************************************************************/
+;/************************* Global variable declaration ************************/
+;/******************************************************************************/
+;static int LoadInit;
+;extern cli_t cli;
+;
+;
+;/******************************************************************************/
+;/************************** Functions Implementation **************************/
+;/******************************************************************************/
+;
+;void Timer1Init(int LoadValue)
+; 0005 001E {
+
+	.CSEG
+;PCODE: $0000000D VOL: 0
+;PCODE: $0000000E VOL: 0
+; 0005 001F  TCNT1      = LoadValue;
+;PCODE: $0000000F VOL: 0
+;	LoadValue -> Y+0
+;PCODE: $00000010 VOL: 0
+;PCODE: $00000011 VOL: 0
+; 0005 0020  LoadInit   = LoadValue;
+;PCODE: $00000012 VOL: 0
+;PCODE: $00000013 VOL: 0
+; 0005 0021  TIMSK      |= 1<<TOIE1;
+;PCODE: $00000014 VOL: 0
+;PCODE: $00000015 VOL: 0
+;PCODE: $00000016 VOL: 0
+; 0005 0022  TCCR1B     |= (1 << CS10) | (1 << CS12);
+;PCODE: $00000017 VOL: 0
+;PCODE: $00000018 VOL: 0
+;PCODE: $00000019 VOL: 0
+; 0005 0023  TIFR       = 0x01; //clear timer1 overflow flag to start timer 1
+;PCODE: $0000001A VOL: 0
+;PCODE: $0000001B VOL: 0
+; 0005 0024 }
+;PCODE: $0000001C VOL: 0
+;PCODE: $0000001D VOL: 0
+;PCODE: $0000001E VOL: 0
+;
+;
+;
+;
+;
+;
+;
+;//// Timer 0 overflow interrupt service routine
+;//interrupt [TIM0_OVF] void timer0_ovf_isr(void)
+;//{
+;//    //Dotmatrix_Timer();
+;//    //DotMatRefresh();
+;//    cli_process(&cli);
+;//    TCNT0+=0x06;
+;//}
+;
+;
+;
+;
+;// Timer 1 overflow interrupt service routine
+;interrupt [TIM1_OVF] void timer1_ovf_isr(void)
+; 0005 003A {
+;PCODE: $0000001F VOL: 0
+;PCODE: $00000020 VOL: 0
+; 0005 003B     //DotMatRefresh();
+; 0005 003C     cli_process(&cli);
+;PCODE: $00000021 VOL: 0
+;PCODE: $00000022 VOL: 0
+; 0005 003D     TCNT1+=LoadInit;
+;PCODE: $00000023 VOL: 0
+;PCODE: $00000024 VOL: 0
+;PCODE: $00000025 VOL: 0
+;PCODE: $00000026 VOL: 0
+; 0005 003E }
+;PCODE: $00000027 VOL: 0
+;PCODE: $00000028 VOL: 0
+;PCODE: $00000029 VOL: 0

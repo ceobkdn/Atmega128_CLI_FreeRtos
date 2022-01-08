@@ -1,0 +1,446 @@
+;/*
+; * MIT License
+; *
+; * Copyright (c) 2019 Sean Farrelly
+; *
+; * Permission is hereby granted, free of charge, to any person obtaining a copy
+; * of this software and associated documentation files (the "Software"), to deal
+; * in the Software without restriction, including without limitation the rights
+; * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+; * copies of the Software, and to permit persons to whom the Software is
+; * furnished to do so, subject to the following conditions:
+; *
+; * The above copyright notice and this permission notice shall be included in all
+; * copies or substantial portions of the Software.
+; *
+; * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+; * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+; * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+; * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+; * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+; * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+; * SOFTWARE.
+; *
+; * File        cli.c
+; * Created by  Sean Farrelly
+; * Version     1.0
+; *
+; */
+;
+;/*! @file cli.c
+; * @brief Implementation of command-line interface.
+; */
+;#include "cli.h"
+;PCODE: $00000000 VOL: 0
+	#ifndef __SLEEP_DEFINED__
+;PCODE: $00000001 VOL: 0
+	#define __SLEEP_DEFINED__
+;PCODE: $00000002 VOL: 0
+	.EQU __se_bit=0x20
+;PCODE: $00000003 VOL: 0
+	.EQU __sm_mask=0x1C
+;PCODE: $00000004 VOL: 0
+	.EQU __sm_powerdown=0x10
+;PCODE: $00000005 VOL: 0
+	.EQU __sm_powersave=0x18
+;PCODE: $00000006 VOL: 0
+	.EQU __sm_standby=0x14
+;PCODE: $00000007 VOL: 0
+	.EQU __sm_ext_standby=0x1C
+;PCODE: $00000008 VOL: 0
+	.EQU __sm_adc_noise_red=0x08
+;PCODE: $00000009 VOL: 0
+	.SET power_ctrl_reg=mcucr
+;PCODE: $0000000A VOL: 0
+	#endif
+;PCODE: $0000000B VOL: 0
+;PCODE: $0000000C VOL: 0
+;
+;#include <stdint.h>
+;#include <string.h>
+;extern bit cmd_enter;
+;
+;static uint8_t buf[MAX_BUF_SIZE];      /* CLI Rx byte-buffer */
+;static uint8_t *buf_ptr;               /* Pointer to Rx byte-buffer */
+;
+;static uint8_t cmd_buf[MAX_BUF_SIZE];  /* CLI command buffer */
+;static uint8_t *cmd_ptr;               /* Pointer to command buffer */
+;
+;const char cli_prompt[] = ">> ";       /* CLI prompt displayed to the user */
+
+	.DSEG
+;const char cli_unrecog[] = "\r"; //const char cli_unrecog[] = "CMD: Command not recognised \r";
+;const char *cli_error_msg[] = { "OK", "Command not recognised" };
+_0xC0005:
+	.BYTE 0x1A
+;
+;
+;
+;
+;/*!
+; * @brief This internal API prints a message to the user on the CLI.
+; */
+;static void cli_print(cli_t *cli, const char *msg);
+;
+;/*!
+; * @brief This API initialises the command-line interface.
+; */
+;cli_status_t cli_init(cli_t *cli)
+; 0006 003D {
+
+	.CSEG
+;PCODE: $0000000D VOL: 0
+;PCODE: $0000000E VOL: 0
+; 0006 003E     /* Set buffer ptr to beginning of buf */
+; 0006 003F     buf_ptr = buf;
+;PCODE: $0000000F VOL: 0
+;	*cli -> Y+0
+;PCODE: $00000010 VOL: 0
+;PCODE: $00000011 VOL: 0
+; 0006 0040 
+; 0006 0041     /* Print the CLI prompt. */
+; 0006 0042     cli_print(cli, "\033[2J\033[H\033[3J");
+;PCODE: $00000012 VOL: 0
+;PCODE: $00000013 VOL: 0
+;PCODE: $00000014 VOL: 0
+;PCODE: $00000015 VOL: 0
+;PCODE: $00000016 VOL: 0
+; 0006 0043     //cli_print(cli, cli_prompt);
+; 0006 0044 
+; 0006 0045     return CLI_OK;
+;PCODE: $00000017 VOL: 0
+;PCODE: $00000018 VOL: 0
+;PCODE: $00000019 VOL: 0
+; 0006 0046 }
+;PCODE: $0000001A VOL: 0
+
+	.DSEG
+_0xC0007:
+	.BYTE 0xC
+;
+;/*!
+; * @brief This API deinitialises the command-line interface.
+; */
+;cli_status_t cli_deinit(cli_t *cli)
+; 0006 004C {
+
+	.CSEG
+;PCODE: $0000001B VOL: 0
+;PCODE: $0000001C VOL: 0
+; 0006 004D     return CLI_OK;
+;PCODE: $0000001D VOL: 0
+;	*cli -> Y+0
+;PCODE: $0000001E VOL: 0
+;PCODE: $0000001F VOL: 0
+;PCODE: $00000020 VOL: 0
+; 0006 004E }
+;PCODE: $00000021 VOL: 0
+;
+;
+;/*! @brief This API must be periodically called by the user to process and execute
+; *         any commands received.
+; */
+;cli_status_t cli_process(cli_t *cli)
+; 0006 0055 {
+;PCODE: $00000022 VOL: 0
+;PCODE: $00000023 VOL: 0
+; 0006 0056     uint8_t argc = 0;
+; 0006 0057     int i = 0;
+; 0006 0058     char *argv[30];
+; 0006 0059     if(cmd_enter)
+;PCODE: $00000024 VOL: 0
+;PCODE: $00000025 VOL: 0
+;PCODE: $00000026 VOL: 0
+;	*cli -> Y+64
+;	argc -> R17
+;	i -> R18,R19
+;	argv -> Y+4
+;PCODE: $00000027 VOL: 0
+;PCODE: $00000028 VOL: 0
+;PCODE: $00000029 VOL: 0
+;PCODE: $0000002A VOL: 0
+;PCODE: $0000002B VOL: 0
+;PCODE: $0000002C VOL: 0
+;PCODE: $0000002D VOL: 0
+; 0006 005A     {
+; 0006 005B         cmd_enter = 0;
+;PCODE: $0000002E VOL: 0
+;PCODE: $0000002F VOL: 0
+;PCODE: $00000030 VOL: 0
+; 0006 005C         /* Get the first token (cmd name) */
+; 0006 005D         argv[argc] = strtok(cmd_buf, " ");
+;PCODE: $00000031 VOL: 0
+;PCODE: $00000032 VOL: 0
+;PCODE: $00000033 VOL: 0
+;PCODE: $00000034 VOL: 0
+;PCODE: $00000035 VOL: 0
+;PCODE: $00000036 VOL: 0
+;PCODE: $00000037 VOL: 0
+;PCODE: $00000038 VOL: 0
+;PCODE: $00000039 VOL: 0
+;PCODE: $0000003A VOL: 0
+;PCODE: $0000003B VOL: 0
+;PCODE: $0000003C VOL: 0
+;PCODE: $0000003D VOL: 0
+; 0006 005E 
+; 0006 005F         /* Walk through the other tokens (parameters) */
+; 0006 0060         while((argv[argc] != NULL) && (argc < 30))
+;PCODE: $0000003E VOL: 0
+;PCODE: $0000003F VOL: 0
+;PCODE: $00000040 VOL: 0
+;PCODE: $00000041 VOL: 0
+;PCODE: $00000042 VOL: 0
+;PCODE: $00000043 VOL: 0
+;PCODE: $00000044 VOL: 0
+;PCODE: $00000045 VOL: 0
+;PCODE: $00000046 VOL: 0
+;PCODE: $00000047 VOL: 0
+;PCODE: $00000048 VOL: 0
+;PCODE: $00000049 VOL: 0
+;PCODE: $0000004A VOL: 0
+;PCODE: $0000004B VOL: 0
+;PCODE: $0000004C VOL: 0
+;PCODE: $0000004D VOL: 0
+; 0006 0061         {
+; 0006 0062             argv[++argc] = strtok(NULL, " ");
+;PCODE: $0000004E VOL: 0
+;PCODE: $0000004F VOL: 0
+;PCODE: $00000050 VOL: 0
+;PCODE: $00000051 VOL: 0
+;PCODE: $00000052 VOL: 0
+;PCODE: $00000053 VOL: 0
+;PCODE: $00000054 VOL: 0
+;PCODE: $00000055 VOL: 0
+;PCODE: $00000056 VOL: 0
+;PCODE: $00000057 VOL: 0
+;PCODE: $00000058 VOL: 0
+;PCODE: $00000059 VOL: 0
+;PCODE: $0000005A VOL: 0
+;PCODE: $0000005B VOL: 0
+;PCODE: $0000005C VOL: 0
+; 0006 0063         }
+;PCODE: $0000005D VOL: 0
+;PCODE: $0000005E VOL: 0
+; 0006 0064 
+; 0006 0065         /* Search the command table for a matching command, using argv[0]
+; 0006 0066          * which is the command name. */
+; 0006 0067         for(i = 0 ; i < cli->cmd_cnt ; i++)
+;PCODE: $0000005F VOL: 0
+;PCODE: $00000060 VOL: 0
+;PCODE: $00000061 VOL: 0
+;PCODE: $00000062 VOL: 0
+;PCODE: $00000063 VOL: 0
+;PCODE: $00000064 VOL: 0
+;PCODE: $00000065 VOL: 0
+;PCODE: $00000066 VOL: 0
+;PCODE: $00000067 VOL: 0
+;PCODE: $00000068 VOL: 0
+;PCODE: $00000069 VOL: 0
+; 0006 0068         {
+; 0006 0069             if(strcmp(argv[0], cli->cmd_tbl[i].cmd) == 0)
+;PCODE: $0000006A VOL: 0
+;PCODE: $0000006B VOL: 0
+;PCODE: $0000006C VOL: 0
+;PCODE: $0000006D VOL: 0
+;PCODE: $0000006E VOL: 0
+;PCODE: $0000006F VOL: 0
+;PCODE: $00000070 VOL: 0
+;PCODE: $00000071 VOL: 0
+;PCODE: $00000072 VOL: 0
+;PCODE: $00000073 VOL: 0
+;PCODE: $00000074 VOL: 0
+;PCODE: $00000075 VOL: 0
+; 0006 006A             {
+; 0006 006B                 /* Found a match, execute the associated function. */
+; 0006 006C                 cli->cmd_tbl[i].func(argc, argv);
+;PCODE: $00000076 VOL: 0
+;PCODE: $00000077 VOL: 0
+;PCODE: $00000078 VOL: 0
+;PCODE: $00000079 VOL: 0
+;PCODE: $0000007A VOL: 0
+;PCODE: $0000007B VOL: 0
+;PCODE: $0000007C VOL: 0
+;PCODE: $0000007D VOL: 0
+;PCODE: $0000007E VOL: 0
+;PCODE: $0000007F VOL: 0
+;PCODE: $00000080 VOL: 0
+;PCODE: $00000081 VOL: 0
+;PCODE: $00000082 VOL: 0
+;PCODE: $00000083 VOL: 0
+; 0006 006D                 UartSend( '\r' );
+;PCODE: $00000084 VOL: 0
+;PCODE: $00000085 VOL: 0
+;PCODE: $00000086 VOL: 0
+; 0006 006E                 cli_print(cli, cli_prompt);
+;PCODE: $00000087 VOL: 0
+;PCODE: $00000088 VOL: 0
+;PCODE: $00000089 VOL: 0
+;PCODE: $0000008A VOL: 0
+; 0006 006F 
+; 0006 0070                 return CLI_OK;
+;PCODE: $0000008B VOL: 0
+;PCODE: $0000008C VOL: 0
+;PCODE: $0000008D VOL: 0
+;PCODE: $0000008E VOL: 0
+; 0006 0071                 //return cli->cmd_tbl[i].func(argc, argv);
+; 0006 0072             }
+; 0006 0073         }
+;PCODE: $0000008F VOL: 0
+;PCODE: $00000090 VOL: 0
+;PCODE: $00000091 VOL: 0
+;PCODE: $00000092 VOL: 0
+;PCODE: $00000093 VOL: 0
+;PCODE: $00000094 VOL: 0
+; 0006 0074 
+; 0006 0075 
+; 0006 0076         /* Command not found */
+; 0006 0077         cli_print(cli, cli_unrecog);
+;PCODE: $00000095 VOL: 0
+;PCODE: $00000096 VOL: 0
+;PCODE: $00000097 VOL: 0
+;PCODE: $00000098 VOL: 0
+; 0006 0078         cli_print(cli, cli_prompt);
+;PCODE: $00000099 VOL: 0
+;PCODE: $0000009A VOL: 0
+;PCODE: $0000009B VOL: 0
+;PCODE: $0000009C VOL: 0
+; 0006 0079         return CLI_E_CMD_NOT_FOUND;
+;PCODE: $0000009D VOL: 0
+;PCODE: $0000009E VOL: 0
+;PCODE: $0000009F VOL: 0
+;PCODE: $000000A0 VOL: 0
+; 0006 007A     }
+; 0006 007B }
+;PCODE: $000000A1 VOL: 0
+;PCODE: $000000A2 VOL: 0
+;PCODE: $000000A3 VOL: 0
+;PCODE: $000000A4 VOL: 0
+;PCODE: $000000A5 VOL: 0
+;
+;/*!
+; * @brief This API should be called from the devices interrupt handler whenever a
+; *        character is received over the input stream.
+; */
+;cli_status_t cli_put(cli_t *cli, char c)
+; 0006 0082 {
+;PCODE: $000000A6 VOL: 0
+;PCODE: $000000A7 VOL: 0
+; 0006 0083     switch(c)
+;PCODE: $000000A8 VOL: 0
+;	*cli -> Y+1
+;	c -> Y+0
+;PCODE: $000000A9 VOL: 0
+;PCODE: $000000AA VOL: 0
+; 0006 0084     {
+; 0006 0085     case '\r':
+;PCODE: $000000AB VOL: 0
+;PCODE: $000000AC VOL: 0
+; 0006 0086 
+; 0006 0087         *buf_ptr = '\0';            /* Terminate the msg and reset the msg ptr.      */
+;PCODE: $000000AD VOL: 0
+;PCODE: $000000AE VOL: 0
+;PCODE: $000000AF VOL: 0
+; 0006 0088         strcpy(cmd_buf, buf);       /* Copy string to command buffer for processing. */
+;PCODE: $000000B0 VOL: 0
+;PCODE: $000000B1 VOL: 0
+;PCODE: $000000B2 VOL: 0
+;PCODE: $000000B3 VOL: 0
+; 0006 0089         buf_ptr = buf;              /* Reset buf_ptr to beginning.                   */
+;PCODE: $000000B4 VOL: 0
+;PCODE: $000000B5 VOL: 0
+; 0006 008A         cli_print(cli, cli_prompt); /* Print the CLI prompt to the user.             */
+;PCODE: $000000B6 VOL: 0
+;PCODE: $000000B7 VOL: 0
+;PCODE: $000000B8 VOL: 0
+;PCODE: $000000B9 VOL: 0
+; 0006 008B         cmd_enter = 1;
+;PCODE: $000000BA VOL: 0
+;PCODE: $000000BB VOL: 0
+;PCODE: $000000BC VOL: 0
+; 0006 008C         break;
+;PCODE: $000000BD VOL: 0
+; 0006 008D 
+; 0006 008E     case '\b':
+;PCODE: $000000BE VOL: 0
+;PCODE: $000000BF VOL: 0
+;PCODE: $000000C0 VOL: 0
+; 0006 008F         /* Backspace. Delete character. */
+; 0006 0090         if(buf_ptr > buf)
+;PCODE: $000000C1 VOL: 0
+;PCODE: $000000C2 VOL: 0
+;PCODE: $000000C3 VOL: 0
+;PCODE: $000000C4 VOL: 0
+; 0006 0091             buf_ptr--;
+;PCODE: $000000C5 VOL: 0
+;PCODE: $000000C6 VOL: 0
+;PCODE: $000000C7 VOL: 0
+;PCODE: $000000C8 VOL: 0
+; 0006 0092         break;
+;PCODE: $000000C9 VOL: 0
+;PCODE: $000000CA VOL: 0
+; 0006 0093 
+; 0006 0094     default:
+;PCODE: $000000CB VOL: 0
+; 0006 0095         /* Normal character received, add to buffer. */
+; 0006 0096         if((buf_ptr - buf) < MAX_BUF_SIZE)
+;PCODE: $000000CC VOL: 0
+;PCODE: $000000CD VOL: 0
+;PCODE: $000000CE VOL: 0
+;PCODE: $000000CF VOL: 0
+;PCODE: $000000D0 VOL: 0
+; 0006 0097             *buf_ptr++ = c;
+;PCODE: $000000D1 VOL: 0
+;PCODE: $000000D2 VOL: 0
+;PCODE: $000000D3 VOL: 0
+;PCODE: $000000D4 VOL: 0
+;PCODE: $000000D5 VOL: 0
+;PCODE: $000000D6 VOL: 0
+;PCODE: $000000D7 VOL: 0
+; 0006 0098         else
+;PCODE: $000000D8 VOL: 0
+;PCODE: $000000D9 VOL: 0
+; 0006 0099             return CLI_E_BUF_FULL;
+;PCODE: $000000DA VOL: 0
+;PCODE: $000000DB VOL: 0
+;PCODE: $000000DC VOL: 0
+; 0006 009A         break;
+;PCODE: $000000DD VOL: 0
+;PCODE: $000000DE VOL: 0
+; 0006 009B     }
+;PCODE: $000000DF VOL: 0
+; 0006 009C }
+;PCODE: $000000E0 VOL: 0
+;PCODE: $000000E1 VOL: 0
+;PCODE: $000000E2 VOL: 0
+;
+;/*!
+; * @brief Print a message on the command-line interface.
+; */
+;static void cli_print(cli_t *cli, const char *msg)
+; 0006 00A2 {
+;PCODE: $000000E3 VOL: 0
+;PCODE: $000000E4 VOL: 0
+; 0006 00A3     /* Temp buffer to store text in ram first */
+; 0006 00A4     char buf[50];
+; 0006 00A5 
+; 0006 00A6     strcpy(buf, msg);
+;PCODE: $000000E5 VOL: 0
+;PCODE: $000000E6 VOL: 0
+;	*cli -> Y+52
+;	*msg -> Y+50
+;	buf -> Y+0
+;PCODE: $000000E7 VOL: 0
+;PCODE: $000000E8 VOL: 0
+;PCODE: $000000E9 VOL: 0
+;PCODE: $000000EA VOL: 0
+; 0006 00A7     cli->println(buf);
+;PCODE: $000000EB VOL: 0
+;PCODE: $000000EC VOL: 0
+;PCODE: $000000ED VOL: 0
+;PCODE: $000000EE VOL: 0
+;PCODE: $000000EF VOL: 0
+;PCODE: $000000F0 VOL: 0
+; 0006 00A8 }
+;PCODE: $000000F1 VOL: 0
+;PCODE: $000000F2 VOL: 0
+;PCODE: $000000F3 VOL: 0

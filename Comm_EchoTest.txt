@@ -1,0 +1,111 @@
+
+
+#include <mega128.h>
+#include <stdio.h> // Standard Input/Output functions
+#include <string.h>
+#include <delay.h>
+#include "uart.h"
+#include "sw.h"
+#include "dotmat.h"
+#include "clcd.h"
+#include "cli.h"
+
+extern char rx_buffer0[RX_BUFFER_SIZE0];
+extern unsigned int rx_wr_index0,rx_counter0;
+extern bit rx_buffer_overflow0; // This flag is set on USART0 Receiver buffer overflow
+extern cli_t cli;
+
+void SystemInit(void);
+cli_status_t help_func(int argc, char **argv);
+cli_status_t blink_func(int argc, char **argv);
+
+    
+
+void main(void)
+{
+
+    cmd_t cmd_tbl[] = {{"help",help_func},{"blink",blink_func}};
+    
+    SystemInit();
+    Uart0Init();
+   
+    //DotMatInit(); 
+    //LcdInit();
+    
+    cli.println = user_uart_println;
+    cli.cmd_tbl = cmd_tbl;
+    cli.cmd_cnt = sizeof(cmd_tbl)/sizeof(cmd_t);
+    cli_init(&cli);
+
+    while(1)
+    {
+        cli_process(&cli);
+    }
+
+}
+
+
+
+
+void SystemInit(void)
+{
+    //---External I/O initialization       
+    LED_CON=0X00;       // LED GLCD Control bus
+    SET_CON=0X00;       // FND, Buzzer, RELAY Control bus
+    LCD_CON=0X00;       // TLCD, GLCD Control bus
+    LCD_DATABUS=0X00;   // TLCD, GLCD, FND, Dotmatrix Data bus
+    DOT_YELLOW=0X00;    // Dotmatrix Yellow LED
+    DOT_RED=0X00;       // Dotmatrix Yellow RED
+    STEPMOR=0X00;       // Stepping Motor Control bus
+    DCSERVO=0X00;       // DC, Servo Motor Control bus      
+    //----------------------------------------  
+    #asm("sei") // Global enable interrupts 
+}
+
+
+cli_status_t user_uart_println(char *string)
+{
+    UartSend(string);
+}
+
+cli_status_t help_func(int argc, char **argv)
+{
+    cli.println("HELP function executed");
+    return CLI_OK;
+}
+
+cli_status_t blink_func(int argc, char **argv)
+{
+    if(argc > 0)
+    {
+        if(strcmp(argv[1], "-help") == 0)
+        {
+            cli.println("BLINK help menu");
+        }
+    }
+    else
+    {
+        cli.println("BLINK function executed");
+    } 
+    return CLI_OK;
+}
+
+
+
+
+//while (1) // Endless Loop
+//      { 
+//         LedTurn();  
+//         //DotmatrixTest();  
+//         //DisplayLCD();
+//         if(rx_buffer_overflow0)
+//         {
+//          DisplayLCDLine1(rx_buffer0);
+//          DisplayLCDLine2(rx_buffer0);
+//          rx_buffer_overflow0=0; 
+//          UartSend( '\n' );
+//         }
+//         
+//         
+//      }
+
